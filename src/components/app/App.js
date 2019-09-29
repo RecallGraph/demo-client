@@ -32,8 +32,15 @@ class App extends Component {
   render() {
     return (
       <Container fluid>
-        <Navbar color="inverse" light expand="md">
-          <NavbarBrand href="/">CivicGraph Demo</NavbarBrand>
+        <Navbar
+          color="inverse"
+          light
+          expand="md"
+          className="border-bottom mb-2"
+        >
+          <NavbarBrand href="/">
+            CivicGraph Demo - A DIY Solar System
+          </NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav className="ml-auto" navbar>
