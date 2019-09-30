@@ -13,7 +13,8 @@ import {
   RotateCcw
 } from "react-feather";
 import { Button, Col, Row } from "reactstrap";
-import { show } from "../../lib/adb-client";
+import { init, load, show } from "../../lib/api-client";
+import { annotate, buildSwitchBoard, generateSessionID } from "../../lib/utils";
 import "./Canvas.css";
 import style from "./style";
 
@@ -29,8 +30,15 @@ class Canvas extends React.Component {
       headless: true
     });
 
+    let sessionID = window.localStorage.getItem("sessionID");
+    if (!sessionID) {
+      sessionID = generateSessionID();
+      init(sessionID);
+    }
+
     this.state = {
-      elements: []
+      elements: [],
+      sessionID
     };
   }
 
@@ -38,17 +46,11 @@ class Canvas extends React.Component {
     window.cy = this.cy;
 
     this.configurePlugins();
-
-    let data = (await show(
-      this.props.path || "/g/evstore_test_ss_lineage",
-      null,
-      { groupBy: "type" }
-    )).body;
-    data = this.cg2cy(data);
-    data = this.annotate(data);
-
-    this.setData(data);
     this.setHandlers();
+
+    let data = await load(this.state.sessionID);
+    data = annotate(data);
+    this.setData(data);
 
     const sun = this.getSun();
     const switchboard = sun.scratch("switchboard");
@@ -192,30 +194,7 @@ class Canvas extends React.Component {
     cxtDefaults.forEach(cxt => this.cy.cxtmenu(cxt));
   }
 
-  draw() {
-    const options = {
-      name: "breadthfirst",
-
-      fit: true, // whether to fit the viewport to the graph
-      directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
-      padding: 30, // padding on fit
-      circle: true, // put depths in concentric circles if true, put depths top down if false
-      grid: false, // whether to create an even grid into which the DAG is placed (circle:false only)
-      spacingFactor: 1.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
-      avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-      nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout
-      // algorithm
-      maximal: true, // whether to shift nodes down their natural BFS depths in order to avoid upwards edges (DAGS
-      // only)
-      transform: function(node, position) {
-        return position;
-      } // transform a given node position. Useful for changing flow direction in discrete layouts
-    };
-    this.cy.layout(options).run();
-  }
-
   getChildren(node, objClass) {
-    console.log({ node, objClass });
     const outgoers = this.datacy.$id(node.id()).outgoers();
 
     if (objClass) {
@@ -304,24 +283,12 @@ class Canvas extends React.Component {
     return menu;
   }
 
-  buildSwitchBoard(dataNode) {
-    const childClasses = dataNode
-      .outgoers()
-      .filter(el => el.isNode())
-      .reduce((acc, node) => {
-        acc.add(node.data()["obj-class"]);
-
-        return acc;
-      }, new Set());
-
-    const switchboard = {};
-    for (const objClass of childClasses) {
-      switchboard[objClass] = false;
+  async setElements(startingNode, elements = []) {
+    let data = await show(this.state.sessionID);
+    if (data.length) {
+      data = this.annotate(data);
     }
-    dataNode.scratch("switchboard", switchboard);
-  }
 
-  setElements(startingNode, elements = []) {
     startingNode = startingNode || this.getSun();
     elements.push(startingNode);
 
@@ -351,9 +318,9 @@ class Canvas extends React.Component {
 
     cy.elements().remove();
     cy.add(data);
-    // cy.$('node [[degree = 0]]').remove();
+    cy.$("node [[degree = 0]]").remove();
     cy.$("*").addClass("data");
-    cy.$("node").forEach(node => this.buildSwitchBoard(node));
+    cy.$("node").forEach(node => buildSwitchBoard(node));
   }
 
   setHandlers() {
@@ -464,46 +431,6 @@ class Canvas extends React.Component {
         </Row>
       </div>
     );
-  }
-
-  cg2cy(data) {
-    const typeMap = {
-      vertex: "nodes",
-      edge: "edges"
-    };
-    const fieldMap = {
-      _id: "id",
-      _from: "source",
-      _to: "target"
-    };
-
-    const result = {};
-
-    for (let el of data) {
-      const key = typeMap[el.type];
-      result[key] = [];
-      for (let node of el.nodes) {
-        const item = {};
-        for (let k in node) {
-          // noinspection JSUnfilteredForInLoop
-          item[fieldMap[k] || k] = node[k];
-        }
-        result[key].push({ data: item });
-      }
-    }
-
-    return result;
-  }
-
-  annotate(data) {
-    data.nodes.forEach(
-      node =>
-        (node.data["obj-class"] = node.data.id.match(
-          /evstore_test_(.*)\/.*/
-        )[1])
-    );
-
-    return data;
   }
 }
 
