@@ -1,44 +1,25 @@
 import Cytoscape from "cytoscape";
 import Cxtmenu from "cytoscape-cxtmenu";
-import Edgehandles from "cytoscape-edgehandles";
 import Popper from "cytoscape-popper";
 import React from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 import ReactDOM from "react-dom";
-import {
-  Maximize2,
-  Minimize2,
-  Printer,
-  Repeat,
-  RotateCcw
-} from "react-feather";
+import { Plus, Repeat, RotateCcw, Trash2, XCircle } from "react-feather";
 import { Button, Col, Row } from "reactstrap";
-import { init, load, show } from "../../lib/api-client";
-import { annotate, buildSwitchBoard, generateSessionID } from "../../lib/utils";
+import { init, remove, show } from "../../lib/api-client";
+import { generateSessionID } from "../../lib/utils";
 import "./Canvas.css";
 import style from "./style";
 
 Cytoscape.use(Popper);
 Cytoscape.use(Cxtmenu);
-Cytoscape.use(Edgehandles);
 
 class Canvas extends React.Component {
   constructor(props = {}) {
     super(props);
 
-    window.datacy = this.datacy = Cytoscape({
-      headless: true
-    });
-
-    let sessionID = window.localStorage.getItem("sessionID");
-    if (!sessionID) {
-      sessionID = generateSessionID();
-      init(sessionID);
-    }
-
     this.state = {
-      elements: [],
-      sessionID
+      elements: []
     };
   }
 
@@ -48,197 +29,54 @@ class Canvas extends React.Component {
     this.configurePlugins();
     this.setHandlers();
 
-    let data = await load(this.state.sessionID);
-    data = annotate(data);
-    this.setData(data);
-
-    const sun = this.getSun();
-    const switchboard = sun.scratch("switchboard");
-    switchboard.planets = true;
+    let sessionID = window.localStorage.getItem("sessionID");
+    if (!sessionID) {
+      await this.reset();
+    }
 
     this.setElements();
   }
 
-  getSun() {
-    return this.datacy.$('node[obj-class = "stars"]')[0];
+  reset() {
+    const sessionID = generateSessionID();
+    return init(sessionID);
   }
 
   configurePlugins() {
-    // the default values of each option are outlined below:
-    const ehDefaults = {
-      preview: true, // whether to show added edges preview before releasing selection
-      hoverDelay: 150, // time spent hovering over a target node before it is considered selected
-      handleNodes: "node", // selector/filter function for whether edges can be made from a given node
-      snap: true, // when enabled, the edge can be drawn by just moving close to a target node
-      snapThreshold: 50, // the target node must be less than or equal to this many pixels away from the cursor/finger
-      snapFrequency: 15, // the number of times per second (Hz) that snap checks done (lower is less expensive)
-      noEdgeEventsInDraw: false, // set events:no to edges during draws, prevents mouseouts on compounds
-      disableBrowserGestures: true, // during an edge drawing gesture, disable browser gestures such as two-finger
-      // trackpad swipe and pinch-to-zoom
-      handlePosition: function(node) {
-        return "middle top"; // sets the position of the handle in the format of "X-AXIS Y-AXIS" such as "left top",
-        // "middle top"
-      },
-      handleInDrawMode: false, // whether to show the handle in draw mode
-      edgeType: function(sourceNode, targetNode) {
-        // can return 'flat' for flat edges between nodes or 'node' for intermediate node between them
-        // returning null/undefined means an edge can't be added between the two nodes
-        return "flat";
-      },
-      loopAllowed: function(node) {
-        // for the specified node, return whether edges from itself to itself are allowed
-        return true;
-      },
-      nodeLoopOffset: -50, // offset for edgeType: 'node' loops
-      nodeParams: function(sourceNode, targetNode) {
-        // for edges between the specified source and target
-        // return element object to be passed to cy.add() for intermediary node
-        return {};
-      },
-      edgeParams: function(sourceNode, targetNode, i) {
-        // for edges between the specified source and target
-        // return element object to be passed to cy.add() for edge
-        // NB: i indicates edge index in case of edgeType: 'node'
-        return {};
-      },
-      ghostEdgeParams: function() {
-        // return element object to be passed to cy.add() for the ghost edge
-        // (default classes are always added for you)
-        return {};
-      },
-      show: function(sourceNode) {
-        // fired when handle is shown
-      },
-      hide: function(sourceNode) {
-        // fired when the handle is hidden
-      },
-      start: function(sourceNode) {
-        // fired when edgehandles interaction starts (drag on handle)
-      },
-      complete: function(sourceNode, targetNode, addedEles) {
-        // fired when edgehandles is done and elements are added
-      },
-      stop: function(sourceNode) {
-        // fired when edgehandles interaction is stopped (either complete with added edges or incomplete)
-      },
-      cancel: function(sourceNode, cancelledTargets) {
-        // fired when edgehandles are cancelled (incomplete gesture)
-      },
-      hoverover: function(sourceNode, targetNode) {
-        // fired when a target is hovered
-      },
-      hoverout: function(sourceNode, targetNode) {
-        // fired when a target isn't hovered anymore
-      },
-      previewon: function(sourceNode, targetNode, previewEles) {
-        // fired when preview is shown
-      },
-      previewoff: function(sourceNode, targetNode, previewEles) {
-        // fired when preview is hidden
-      },
-      drawon: function() {
-        // fired when draw mode enabled
-      },
-      drawoff: function() {
-        // fired when draw mode disabled
-      }
+    const cxtMenu = {
+      menuRadius: 60, // the radius of the circular menu in pixels
+      selector: "node", // elements matching this Cytoscape.js selector will trigger cxtmenus
+      commands: this.buildMenu.bind(this), // function( ele ){ return [ /*...*/ ] }, // a function that returns
+      // commands or a promise of commands
+      fillColor: "rgba(0, 0, 0, 0.75)", // the background colour of the menu
+      activeFillColor: "rgba(100, 100, 100, 0.5)", // the colour used to indicate the selected command
+      activePadding: 10, // additional size in pixels for the active command
+      indicatorSize: 16, // the size in pixels of the pointer to the active command
+      separatorWidth: 3, // the empty spacing in pixels between successive commands
+      spotlightPadding: 4, // extra spacing in pixels between the element and the spotlight
+      minSpotlightRadius: 10, // the minimum radius in pixels of the spotlight
+      maxSpotlightRadius: 20, // the maximum radius in pixels of the spotlight
+      openMenuEvents: "tap", // space-separated cytoscape events that will open the menu; only
+      // `cxttapstart` and/or `taphold` work here
+      itemColor: "white", // the colour of text in the command's content
+      itemTextShadowColor: "transparent", // the text shadow colour of the command's content
+      zIndex: 9999, // the z-index of the ui div
+      atMouse: false // draw menu at mouse position
     };
-    this.eh = this.cy.edgehandles(ehDefaults);
 
-    const cxtDefaults = [
-      {
-        menuRadius: 80, // the radius of the circular menu in pixels
-        selector: "*", // elements matching this Cytoscape.js selector will trigger cxtmenus
-        commands: this.buildMenu.bind(this), // function( ele ){ return [ /*...*/ ] }, // a function that returns
-        // commands
-        // or a
-        // promise of
-        // commands
-        fillColor: "rgba(0, 0, 0, 0.75)", // the background colour of the menu
-        activeFillColor: "rgba(1, 105, 217, 0.75)", // the colour used to indicate the selected command
-        activePadding: 10, // additional size in pixels for the active command
-        indicatorSize: 24, // the size in pixels of the pointer to the active command
-        separatorWidth: 3, // the empty spacing in pixels between successive commands
-        spotlightPadding: 4, // extra spacing in pixels between the element and the spotlight
-        minSpotlightRadius: 24, // the minimum radius in pixels of the spotlight
-        maxSpotlightRadius: 38, // the maximum radius in pixels of the spotlight
-        openMenuEvents: "cxttapstart taphold", // space-separated cytoscape events that will open the menu; only
-        // `cxttapstart` and/or `taphold` work here
-        itemColor: "white", // the colour of text in the command's content
-        itemTextShadowColor: "transparent", // the text shadow colour of the command's content
-        zIndex: 9999, // the z-index of the ui div
-        atMouse: false // draw menu at mouse position
-      },
-      {
-        selector: "core",
-
-        commands: [
-          {
-            content: "bg1",
-            select: function() {
-              console.log("bg1");
-            }
-          },
-
-          {
-            content: "bg2",
-            select: function() {
-              console.log("bg2");
-            }
-          }
-        ],
-        openMenuEvents: "cxttapstart taphold"
-      }
-    ];
-
-    cxtDefaults.forEach(cxt => this.cy.cxtmenu(cxt));
-  }
-
-  getChildren(node, objClass) {
-    const outgoers = this.datacy.$id(node.id()).outgoers();
-
-    if (objClass) {
-      return outgoers.filter(el => {
-        if (el.isNode()) {
-          return el.data()["obj-class"] === objClass;
-        } else {
-          return el.target().data()["obj-class"] === objClass;
-        }
-      });
-    }
-
-    return outgoers;
-  }
-
-  getDataNode(node) {
-    return this.datacy.$id(node.id());
-  }
-
-  revealChildren(node, objClass) {
-    const dataNode = this.getDataNode(node);
-    const switchboard = dataNode.scratch("switchboard");
-    switchboard[objClass] = true;
-
-    this.setElements();
-  }
-
-  hideChildren(node, objClass) {
-    const dataNode = this.getDataNode(node);
-    const switchboard = dataNode.scratch("switchboard");
-    switchboard[objClass] = false;
-
-    this.setElements();
+    this.cy.cxtmenu(cxtMenu);
   }
 
   buildMenu(node) {
-    const dataNode = this.getDataNode(node);
+    const sessionID = window.localStorage.getItem("sessionID");
     const menu = [];
+    const self = this;
 
-    const print = document.createElement("span");
-    ReactDOM.render(<Printer />, print);
+    const add = document.createElement("span");
+    ReactDOM.render(<Plus />, add);
     menu.push({
-      fillColor: "rgba(200, 200, 200, 0.75)",
-      content: print.outerHTML,
+      fillColor: "rgba(0, 200, 0, 0.75)",
+      content: add.outerHTML,
       contentStyle: {},
       select: function(el) {
         console.log(el.data());
@@ -246,87 +84,54 @@ class Canvas extends React.Component {
       enabled: true
     });
 
-    const switchboard = dataNode.scratch("switchboard");
-    for (const key in switchboard) {
-      const K = key.charAt(0).toUpperCase();
-      if (switchboard[key]) {
-        const menuItemMinimize = document.createElement("span");
-        ReactDOM.render(
-          <span>
-            <Minimize2 /> {K}
-          </span>,
-          menuItemMinimize
-        );
+    const cancel = document.createElement("span");
+    ReactDOM.render(<XCircle />, cancel);
+    menu.push({
+      fillColor: "rgba(200, 200, 200, 0.75)",
+      content: cancel.outerHTML,
+      enabled: true
+    });
 
-        menu.push({
-          fillColor: "rgba(0, 200, 200, 0.75)",
-          content: menuItemMinimize.outerHTML,
-          select: node => this.hideChildren(node, key)
-        });
-      } else {
-        const menuItemMaximize = document.createElement("span");
-        ReactDOM.render(
-          <span>
-            <Maximize2 /> {K}
-          </span>,
-          menuItemMaximize
-        );
-
-        menu.push({
-          fillColor: "rgba(200, 200, 0, 0.75)",
-          content: menuItemMaximize.outerHTML,
-          select: node => this.revealChildren(node, key)
-        });
-      }
+    if (node.data()["obj-class"] !== "stars") {
+      const del = document.createElement("span");
+      ReactDOM.render(<Trash2 />, del);
+      menu.push({
+        fillColor: "rgba(200, 0, 0, 0.75)",
+        content: del.outerHTML,
+        contentStyle: {},
+        select: async function(el) {
+          const confirmed = window.confirm(
+            "Are you sure? This will remove the selected node and ALL its descendants!"
+          );
+          if (confirmed) {
+            await remove(sessionID, el.id());
+            self.setElements();
+          }
+        },
+        enabled: true
+      });
     }
 
     return menu;
   }
 
-  async setElements(startingNode, elements = []) {
-    let data = await show(this.state.sessionID);
-    if (data.length) {
-      data = this.annotate(data);
-    }
-
-    startingNode = startingNode || this.getSun();
-    elements.push(startingNode);
-
-    const switchboard = startingNode.scratch("switchboard");
-    for (const key in switchboard) {
-      if (switchboard[key]) {
-        const children = this.getChildren(startingNode, key);
-        children.forEach(el => {
-          elements.push(el);
-
-          if (el.isNode()) {
-            this.setElements(el, elements);
-          }
-        });
-      }
-    }
-
-    if (!arguments.length) {
-      this.setState({
-        elements: elements.map(el => el.json())
-      });
-    }
-  }
-
-  setData(data) {
-    const cy = this.datacy;
-
-    cy.elements().remove();
-    cy.add(data);
-    cy.$("node [[degree = 0]]").remove();
-    cy.$("*").addClass("data");
-    cy.$("node").forEach(node => buildSwitchBoard(node));
+  async setElements() {
+    const sessionID = window.localStorage.getItem("sessionID");
+    let data = await show(sessionID);
+    this.setState({
+      elements: data
+    });
   }
 
   setHandlers() {
     const cy = this.cy;
 
-    cy.on("tapdragover select", "edge", e => {
+    cy.on("resize", () => {
+      cy.reset();
+      cy.layout(this.getOptions()).run();
+    });
+
+    cy.on("select mouseover", "edge", e => {
       e.target.style({
         width: 4,
         "line-color": "#007bff",
@@ -334,7 +139,7 @@ class Canvas extends React.Component {
       });
     });
 
-    cy.on("tapdragout unselect", "edge", e => {
+    cy.on("unselect mouseout", "edge", e => {
       const edge = e.target;
 
       if (!edge.selected()) {
@@ -346,41 +151,41 @@ class Canvas extends React.Component {
       }
     });
 
-    cy.on("tapdragover select", "node.data", e => {
+    cy.on("add", "node", e => {
       const node = e.target;
-      const style = node.scratch("style") || {};
-
-      if (!style["background-color"]) {
-        style["background-color"] = node.style("background-color");
-        node.scratch("style", style);
-      }
-
-      node.style({
-        "background-color": "#007bff"
-      });
+      const styleMap = {
+        stars: "#ffff00",
+        planets: "#f7a35c",
+        dwarf_planets: "#90ee7e",
+        moons: "#7798BF",
+        comets: "#aaeeee",
+        asteroids: "#ff0066"
+      };
+      node.style("background-color", styleMap[node.data()["obj-class"]]);
+      node.scratch("style", node.style());
     });
 
-    cy.on("tapdragout unselect", "node.data", e => {
+    cy.on("mouseover select", "node", e => {
+      e.target.style("background-color", "#007bff");
+    });
+
+    cy.on("mouseout unselect", "node", e => {
       const node = e.target;
 
       if (!node.selected()) {
-        node.style({
-          "background-color": node.scratch("style")["background-color"]
-        });
-
-        const style = node.scratch("style") || {};
-        style["background-color"] = false;
-
-        node.scratch("style", style);
+        node.style(
+          "background-color",
+          node.scratch("style")["background-color"]
+        );
       }
     });
   }
 
-  render() {
-    const options = {
+  getOptions() {
+    return {
       name: "breadthfirst",
 
-      fit: false, // whether to fit the viewport to the graph
+      fit: true, // whether to fit the viewport to the graph
       directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
       padding: 30, // padding on fit
       circle: false, // put depths in concentric circles if true, put depths top down if false
@@ -391,24 +196,23 @@ class Canvas extends React.Component {
       // algorithm
       maximal: true, // whether to shift nodes down their natural BFS depths in order to avoid upwards edges (DAGS
       // only)
+      animate: true, // whether to transition the node positions
+      animationDuration: 500, // duration of animation in ms if enabled
+      animateFilter: function() {
+        return true;
+      }, // a function that determines whether the node should be animated.  All nodes animated by default on animate
+      // enabled.  Non-animated nodes are positioned immediately when the layout starts
       transform: function(node, position) {
         return position;
       } // transform a given node position. Useful for changing flow direction in discrete layouts
     };
+  }
+
+  render() {
+    const options = this.getOptions();
 
     return (
       <div>
-        <Row className="my-1">
-          <Col>
-            <Button color="danger">
-              <RotateCcw size={16} /> Reset
-            </Button>
-            &nbsp;
-            <Button color="primary">
-              <Repeat size={16} /> Redraw
-            </Button>
-          </Col>
-        </Row>
         <Row>
           <Col>
             <div
@@ -423,10 +227,41 @@ class Canvas extends React.Component {
                   style={{ width: "100%", height: "100%" }}
                   stylesheet={style}
                   layout={options}
-                  elements={this.state.elements}
+                  elements={CytoscapeComponent.normalizeElements(
+                    this.state.elements
+                  )}
                 />
               </div>
             </div>
+          </Col>
+        </Row>
+        <Row className="my-1">
+          <Col>
+            <Button
+              color="danger"
+              onClick={async () => {
+                const confirmed = window.confirm(
+                  "Are you sure? You will lose all your changes and history!"
+                );
+                if (confirmed) {
+                  await this.reset();
+                  this.cy.reset();
+                  this.setElements();
+                }
+              }}
+            >
+              <RotateCcw size={16} /> Reset
+            </Button>
+            &nbsp;
+            <Button
+              color="primary"
+              onClick={() => {
+                this.cy.reset();
+                this.setElements();
+              }}
+            >
+              <Repeat size={16} /> Redraw
+            </Button>
           </Col>
         </Row>
       </div>

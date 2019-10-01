@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { GitHub } from "react-feather";
 import {
   Col,
   Collapse,
@@ -38,18 +39,25 @@ class App extends Component {
           expand="md"
           className="border-bottom mb-2"
         >
-          <NavbarBrand href="/">
+          <NavbarBrand href="/" className="text-wrap">
             CivicGraph Demo - A DIY Solar System
+            <span
+              className="spinner-grow mx-2 text-danger invisible"
+              role="status"
+              id="loading"
+            >
+              <span className="sr-only">Loading...</span>
+            </span>
           </NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav className="ml-auto" navbar>
               <NavItem>
-                <NavLink href="/components/">Components</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href="https://github.com/reactstrap/reactstrap">
-                  Github
+                <NavLink
+                  href="https://github.com/adityamukho/CivicGraph"
+                  target="_blank"
+                >
+                  <GitHub />
                 </NavLink>
               </NavItem>
             </Nav>

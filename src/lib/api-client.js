@@ -45,23 +45,33 @@ export const show = async (sessionID, nids, timestamp, options) => {
     body: nids ? JSON.stringify(nids) : undefined,
     headers: getHeaders(sessionID)
   });
-  const blob = await response.blob();
-  const data = JSON.parse(await blob.text());
+  const data = JSON.parse(await response.text());
 
   return cg2cy(data);
 };
 
-export const load = async sessionID => {
-  const url = new URL(`${document.location.origin}/api/load`);
+export const list = async (sessionID, nid) => {
+  const url = new URL(`${document.location.origin}/api/list`);
+  url.search = new URLSearchParams({ nid });
 
   const response = await fetch(url, {
     method: "GET",
     headers: getHeaders(sessionID)
   });
-  const blob = await response.blob();
-  const data = JSON.parse(await blob.text());
 
-  return cg2cy(data);
+  return JSON.parse(await response.text());
+};
+
+export const remove = async (sessionID, nid) => {
+  const url = new URL(`${document.location.origin}/api/remove`);
+  url.search = new URLSearchParams({ nid });
+
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: getHeaders(sessionID)
+  });
+
+  return response.text();
 };
 
 export const init = async sessionID => {
@@ -71,8 +81,6 @@ export const init = async sessionID => {
     method: "GET",
     headers: getHeaders(sessionID)
   });
-  const blob = await response.blob();
-  const data = JSON.parse(await blob.text());
 
-  return data;
+  return response.text();
 };

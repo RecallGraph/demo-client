@@ -1,5 +1,11 @@
 [
   {
+    "selector": "*",
+    "style": {
+      "color": "#fff"
+    }
+  },
+  {
     "selector": "node.data",
     "style": {
       "text-valign": "center",
@@ -9,57 +15,9 @@
     }
   },
   {
-    "selector": "node.data[Body]",
+    "selector": "node[Body]",
     "style": {
       "label": "data(Body)"
-    }
-  },
-  {
-    "selector": "node.data[!Body]",
-    "style": {
-      "label": "data(id)"
-    }
-  },
-  {
-    "selector": "node[obj-class = 'stars']",
-    "style": {
-      "background-color": "#eeaaee"
-    }
-  },
-  {
-    "selector": "node[obj-class = 'planets']",
-    "style": {
-      "background-color": "#f7a35c"
-    }
-  },
-  {
-    "selector": "node[obj-class = 'dwarf_planets']",
-    "style": {
-      "background-color": "#90ee7e"
-    }
-  },
-  {
-    "selector": "node[obj-class = 'moons']",
-    "style": {
-      "background-color": "#7798BF"
-    }
-  },
-  {
-    "selector": "node[obj-class = 'comets']",
-    "style": {
-      "background-color": "#aaeeee"
-    }
-  },
-  {
-    "selector": "node[obj-class = 'asteroids']",
-    "style": {
-      "background-color": "#ff0066"
-    }
-  },
-  {
-    "selector": "node:selected",
-    "style": {
-      "background-color": "#007bff"
     }
   },
   {
@@ -72,46 +30,6 @@
       "curve-style": "bezier",
       "target-arrow-color": "#ccc",
       "target-arrow-shape": "vee"
-    }
-  },
-  {
-    "selector": ".eh-handle",
-    "style": {
-      "background-color": "red",
-      "width": 20,
-      "height": 20,
-      "shape": "diamond",
-      "overlay-opacity": 0,
-      "border-width": 12,
-      "border-opacity": 0
-    }
-  },
-  {
-    "selector": ".eh-source",
-    "style": {
-      "border-width": 2,
-      "border-color": "red"
-    }
-  },
-  {
-    "selector": ".eh-target",
-    "style": {
-      "border-width": 2,
-      "border-color": "red"
-    }
-  },
-  {
-    "selector": ".eh-preview, .eh-ghost-edge",
-    "style": {
-      "line-color": "red",
-      "target-arrow-color": "red",
-      "source-arrow-color": "red"
-    }
-  },
-  {
-    "selector": ".eh-ghost-edge.eh-preview-active",
-    "style": {
-      "opacity": 0
     }
   }
 ]
