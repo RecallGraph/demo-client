@@ -12,3 +12,19 @@ export const generateSessionID = () => {
 
   return sessionID;
 };
+
+export const escapeHtml = unsafe => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
+export const getObjClass = data => {
+  return data["obj-class"]
+    .substr(0, data["obj-class"].length - 1)
+    .replace(/_/g, " ")
+    .toProperCase();
+};

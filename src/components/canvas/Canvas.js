@@ -2,12 +2,33 @@ import Cytoscape from "cytoscape";
 import Cxtmenu from "cytoscape-cxtmenu";
 import Popper from "cytoscape-popper";
 import React from "react";
+import BootstrapTable from "react-bootstrap-table-next";
+import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
+import filterFactory, { textFilter } from "react-bootstrap-table2-filter";
+import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css";
 import CytoscapeComponent from "react-cytoscapejs";
 import ReactDOM from "react-dom";
-import { Plus, Repeat, RotateCcw, Trash2, XCircle } from "react-feather";
-import { Button, Col, Row } from "reactstrap";
-import { init, remove, show } from "../../lib/api-client";
-import { generateSessionID } from "../../lib/utils";
+import {
+  Eye,
+  Plus,
+  Repeat,
+  RotateCcw,
+  Trash2,
+  X,
+  XCircle
+} from "react-feather";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardLink,
+  CardText,
+  CardTitle,
+  Col,
+  Row
+} from "reactstrap";
+import { addChildren, init, list, remove, show } from "../../lib/api-client";
+import { generateSessionID, getObjClass } from "../../lib/utils";
 import "./Canvas.css";
 import style from "./style";
 
@@ -72,23 +93,84 @@ class Canvas extends React.Component {
     const menu = [];
     const self = this;
 
-    const add = document.createElement("span");
-    ReactDOM.render(<Plus />, add);
+    const view = document.createElement("span");
+    ReactDOM.render(<Eye />, view);
     menu.push({
-      fillColor: "rgba(0, 200, 0, 0.75)",
-      content: add.outerHTML,
-      contentStyle: {},
+      fillColor: "rgba(0, 0, 200, 0.75)",
+      content: view.outerHTML,
       select: function(el) {
-        console.log(el.data());
-      },
-      enabled: true
-    });
+        window.poppers = window.poppers || {};
+        window.poppers[el.id()] = el.popper({
+          content: () => {
+            const data = Object.assign({}, el.data());
+            delete data.id;
+            delete data._rawId;
+            const objClass = getObjClass(data);
+            delete data["obj-class"];
+            const body = data.Body;
+            delete data.Body;
 
-    const cancel = document.createElement("span");
-    ReactDOM.render(<XCircle />, cancel);
-    menu.push({
-      fillColor: "rgba(200, 200, 200, 0.75)",
-      content: cancel.outerHTML,
+            const content = Object.entries(data).map(entry => ({
+              field: entry[0],
+              value: entry[1]
+            }));
+
+            const columns = [
+              {
+                dataField: "field",
+                text: "Field"
+              },
+              {
+                dataField: "value",
+                text: "Value"
+              }
+            ];
+
+            const popperCard = document.createElement("div");
+            ReactDOM.render(
+              <Card>
+                <CardBody>
+                  <CardTitle
+                    tag="h5"
+                    className="mw-100 mb-4"
+                    style={{ minWidth: "50vw" }}
+                  >
+                    {body}&nbsp;
+                    <span>
+                      <small className="text-muted">({objClass})</small>
+                    </span>
+                    <CardLink
+                      href="#"
+                      className="btn btn-outline-dark float-right align-bottom"
+                      onClick={() => {
+                        window.poppers[el.id()].destroy();
+                        document.getElementById(`popper-${el.id()}`).remove();
+                      }}
+                    >
+                      <X />
+                    </CardLink>
+                  </CardTitle>
+                  <CardText tag="div">
+                    <BootstrapTable
+                      bootstrap4
+                      keyField="field"
+                      data={content}
+                      columns={columns}
+                      hover
+                    />
+                  </CardText>
+                </CardBody>
+              </Card>,
+              popperCard
+            );
+
+            document.getElementsByTagName("body")[0].appendChild(popperCard);
+            popperCard.setAttribute("id", `popper-${el.id()}`);
+
+            return popperCard;
+          }
+        });
+      },
       enabled: true
     });
 
@@ -112,6 +194,158 @@ class Canvas extends React.Component {
       });
     }
 
+    const cancel = document.createElement("span");
+    ReactDOM.render(<XCircle />, cancel);
+    menu.push({
+      fillColor: "rgba(200, 200, 200, 0.75)",
+      content: cancel.outerHTML,
+      enabled: true
+    });
+
+    const add = document.createElement("span");
+    ReactDOM.render(<Plus />, add);
+    menu.push({
+      fillColor: "rgba(0, 200, 0, 0.75)",
+      content: add.outerHTML,
+      contentStyle: {},
+      select: async function(el) {
+        const children = el.outgoers("node");
+        const data = (await list(sessionID, el.data()._rawId)).filter(
+          d => !children.filter(c => c.data()._rawId === d._rawId).length
+        );
+
+        const columns = [
+          {
+            dataField: "Body",
+            text: "Body",
+            sort: true,
+            filter: textFilter()
+          },
+          {
+            dataField: "obj-class",
+            text: "Class",
+            sort: true,
+            filter: textFilter()
+          },
+          {
+            dataField: "Type",
+            text: "Type",
+            sort: true,
+            filter: textFilter()
+          }
+        ];
+
+        const selected = new Set();
+        const selectRow = {
+          mode: "checkbox",
+          clickToSelect: true,
+          bgColor: "#00BFFF",
+          onSelect: (row, isSelect) => {
+            console.log(row);
+            const addButton = document.getElementById("add");
+
+            if (isSelect) {
+              selected.add(row._rawId);
+              if (addButton.classList.contains("disabled")) {
+                addButton.classList.remove("disabled");
+              }
+            } else {
+              selected.delete(row._rawId);
+              if (!selected.size) {
+                addButton.classList.add("disabled");
+              }
+            }
+          },
+          onSelectAll: (isSelect, rows, e) => {
+            const addButton = document.getElementById("add");
+
+            if (isSelect) {
+              for (const row of rows) {
+                selected.add(row._rawId);
+                addButton.classList.remove("disabled");
+              }
+            } else {
+              selected.clear();
+              addButton.classList.add("disabled");
+            }
+          }
+        };
+
+        window.poppers = window.poppers || {};
+        window.poppers[el.id()] = el.popper({
+          content: () => {
+            const popperCard = document.createElement("div");
+            ReactDOM.render(
+              <Card>
+                <CardBody>
+                  <CardTitle
+                    tag="h5"
+                    className="mw-100 mb-4"
+                    style={{ minWidth: "50vw" }}
+                  >
+                    Add Orbiting Body{" "}
+                    <small className="text-muted">({el.data().Body})</small>
+                    <CardLink
+                      href="#"
+                      className="btn btn-outline-dark float-right align-bottom ml-1"
+                      onClick={() => {
+                        window.poppers[el.id()].destroy();
+                        document.getElementById(`popper-${el.id()}`).remove();
+                      }}
+                    >
+                      <X />
+                    </CardLink>
+                    <span>
+                      <CardLink
+                        href="#"
+                        className="btn btn-success disabled float-right"
+                        id="add"
+                        onClick={async () => {
+                          const selectedData = data.filter(d =>
+                            selected.has(d._rawId)
+                          );
+
+                          await addChildren(sessionID, el.id(), selectedData);
+                          window.poppers[el.id()].destroy();
+                          document.getElementById(`popper-${el.id()}`).remove();
+                          self.setElements();
+                        }}
+                      >
+                        <Plus /> Add Selected
+                      </CardLink>
+                    </span>
+                  </CardTitle>
+                  <CardText tag="div" className="mw-100">
+                    {data.length ? (
+                      <BootstrapTable
+                        bootstrap4
+                        keyField="_rawId"
+                        data={data}
+                        columns={columns}
+                        hover
+                        condensed
+                        selectRow={selectRow}
+                        filter={filterFactory()}
+                      />
+                    ) : (
+                      <p>No Orbiters Found.</p>
+                    )}
+                  </CardText>
+                </CardBody>
+              </Card>,
+              popperCard
+            );
+
+            document.getElementsByTagName("body")[0].appendChild(popperCard);
+            popperCard.setAttribute("id", `popper-${el.id()}`);
+
+            return popperCard;
+          }
+        });
+      },
+      enabled: true
+    });
+
     return menu;
   }
 
@@ -123,11 +357,26 @@ class Canvas extends React.Component {
     });
   }
 
+  cyReset() {
+    const cy = this.cy;
+    cy.animation({
+      zoom: {
+        level: 1
+      },
+      pan: {
+        x: 0,
+        y: 0
+      },
+      duration: 500
+    });
+    cy.layout(this.getOptions()).run();
+  }
+
   setHandlers() {
     const cy = this.cy;
 
     cy.on("resize", () => {
-      cy.reset();
+      this.cyReset();
       cy.layout(this.getOptions()).run();
     });
 
@@ -157,11 +406,17 @@ class Canvas extends React.Component {
         stars: "#ffff00",
         planets: "#f7a35c",
         dwarf_planets: "#90ee7e",
-        moons: "#7798BF",
+        moons: "#eeaaee",
         comets: "#aaeeee",
         asteroids: "#ff0066"
       };
       node.style("background-color", styleMap[node.data()["obj-class"]]);
+
+      const size =
+        Math.log(50 * (parseFloat(node.data()["Radius (R⊕)"]) || 1)) * 10;
+      node.style("width", `${size}px`);
+      node.style("height", `${size}px`);
+
       node.scratch("style", node.style());
     });
 
@@ -238,6 +493,7 @@ class Canvas extends React.Component {
         <Row className="my-1">
           <Col>
             <Button
+              className="float-right ml-1"
               color="danger"
               onClick={async () => {
                 const confirmed = window.confirm(
@@ -252,13 +508,10 @@ class Canvas extends React.Component {
             >
               <RotateCcw size={16} /> Reset
             </Button>
-            &nbsp;
             <Button
+              className="float-right"
               color="primary"
-              onClick={() => {
-                this.cy.reset();
-                this.setElements();
-              }}
+              onClick={this.cyReset.bind(this)}
             >
               <Repeat size={16} /> Redraw
             </Button>

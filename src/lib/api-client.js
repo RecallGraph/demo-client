@@ -50,9 +50,9 @@ export const show = async (sessionID, nids, timestamp, options) => {
   return cg2cy(data);
 };
 
-export const list = async (sessionID, nid) => {
+export const list = async (sessionID, _rawId) => {
   const url = new URL(`${document.location.origin}/api/list`);
-  url.search = new URLSearchParams({ nid });
+  url.search = new URLSearchParams({ _rawId });
 
   const response = await fetch(url, {
     method: "GET",
@@ -78,8 +78,21 @@ export const init = async sessionID => {
   const url = new URL(`${document.location.origin}/api/init`);
 
   const response = await fetch(url, {
-    method: "GET",
+    method: "POST",
     headers: getHeaders(sessionID)
+  });
+
+  return response.text();
+};
+
+export const addChildren = async (sessionID, parentID, children) => {
+  const url = new URL(`${document.location.origin}/api/add`);
+  url.search = new URLSearchParams({ parentID });
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(sessionID),
+    body: JSON.stringify(children)
   });
 
   return response.text();
