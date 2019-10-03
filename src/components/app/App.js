@@ -63,7 +63,7 @@ class App extends Component {
             </Nav>
           </Collapse>
         </Navbar>
-        <Container>
+        <Container fluid>
           <Row>
             <Col>
               <Canvas />

@@ -97,3 +97,15 @@ export const addChildren = async (sessionID, parentID, children) => {
 
   return response.text();
 };
+
+export const edit = async (sessionID, node) => {
+  const url = new URL(`${document.location.origin}/api/edit`);
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: getHeaders(sessionID),
+    body: JSON.stringify(node)
+  });
+
+  return response.text();
+};

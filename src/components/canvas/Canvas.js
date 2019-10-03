@@ -1,6 +1,7 @@
 import Cytoscape from "cytoscape";
 import Cxtmenu from "cytoscape-cxtmenu";
 import Popper from "cytoscape-popper";
+import PopperCore from "popper.js";
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
@@ -9,10 +10,13 @@ import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css
 import CytoscapeComponent from "react-cytoscapejs";
 import ReactDOM from "react-dom";
 import {
+  Edit3,
   Eye,
   Plus,
   Repeat,
   RotateCcw,
+  Save,
+  Search,
   Trash2,
   X,
   XCircle
@@ -25,9 +29,20 @@ import {
   CardText,
   CardTitle,
   Col,
+  Form,
+  FormGroup,
+  Input,
+  Label,
   Row
 } from "reactstrap";
-import { addChildren, init, list, remove, show } from "../../lib/api-client";
+import {
+  addChildren,
+  edit as editNode,
+  init,
+  list,
+  remove,
+  show
+} from "../../lib/api-client";
 import { generateSessionID, getObjClass } from "../../lib/utils";
 import "./Canvas.css";
 import style from "./style";
@@ -77,7 +92,7 @@ class Canvas extends React.Component {
       spotlightPadding: 4, // extra spacing in pixels between the element and the spotlight
       minSpotlightRadius: 10, // the minimum radius in pixels of the spotlight
       maxSpotlightRadius: 20, // the maximum radius in pixels of the spotlight
-      openMenuEvents: "tap", // space-separated cytoscape events that will open the menu; only
+      openMenuEvents: "taphold cxttap", // space-separated cytoscape events that will open the menu; only
       // `cxttapstart` and/or `taphold` work here
       itemColor: "white", // the colour of text in the command's content
       itemTextShadowColor: "transparent", // the text shadow colour of the command's content
@@ -202,6 +217,115 @@ class Canvas extends React.Component {
       enabled: true
     });
 
+    const edit = document.createElement("span");
+    ReactDOM.render(<Edit3 />, edit);
+    menu.push({
+      fillColor: "rgba(255, 165, 0, 0.75)",
+      content: edit.outerHTML,
+      select: function(el) {
+        window.poppers = window.poppers || {};
+        window.poppers[el.id()] = el.popper({
+          content: () => {
+            const data = Object.assign({}, el.data());
+            delete data.id;
+            delete data._rawId;
+
+            const objClass = getObjClass(data);
+            delete data["obj-class"];
+
+            const body = data.Body;
+            delete data.Body;
+
+            const content = Object.entries(data).map(entry => ({
+              field: entry[0],
+              value: entry[1]
+            }));
+
+            const popperCard = document.createElement("div");
+            ReactDOM.render(
+              <Card>
+                <CardBody>
+                  <CardTitle
+                    tag="h5"
+                    className="mw-100 mb-4"
+                    style={{ minWidth: "50vw" }}
+                  >
+                    Edit {body}&nbsp;
+                    <span>
+                      <small className="text-muted">({objClass})</small>
+                    </span>
+                    <CardLink
+                      href="#"
+                      className="btn btn-outline-dark float-right align-bottom ml-1"
+                      onClick={() => {
+                        window.poppers[el.id()].destroy();
+                        document.getElementById(`popper-${el.id()}`).remove();
+                      }}
+                    >
+                      <X />
+                    </CardLink>
+                    <CardLink
+                      href="#"
+                      className="btn btn-primary float-right"
+                      id="add"
+                      onClick={async () => {
+                        const data = Object.assign({}, el.data());
+
+                        for (const c of content) {
+                          data[c.field] = c.value;
+                        }
+                        data._id = data.id;
+                        delete data.id;
+
+                        window.poppers[el.id()].destroy();
+                        document.getElementById(`popper-${el.id()}`).remove();
+
+                        await editNode(sessionID, data);
+                        self.setElements();
+                      }}
+                    >
+                      <Save /> Save
+                    </CardLink>
+                  </CardTitle>
+                  <CardText tag="div">
+                    <Form>
+                      {content.map(c => (
+                        <FormGroup key={c.field} row>
+                          <Label for={`${el.id()}-${c.field}`} sm={4} size="sm">
+                            {c.field}
+                          </Label>
+                          <Col sm={8}>
+                            <Input
+                              type="text"
+                              name={c.field}
+                              id={`${el.id()}-${c.field}`}
+                              defaultValue={c.value}
+                              required={true}
+                              bsSize="sm"
+                              onChange={e => {
+                                c.value = e.target.value;
+                              }}
+                            />
+                          </Col>
+                        </FormGroup>
+                      ))}
+                    </Form>
+                  </CardText>
+                </CardBody>
+              </Card>,
+              popperCard
+            );
+
+            document.getElementsByTagName("body")[0].appendChild(popperCard);
+            popperCard.setAttribute("id", `popper-${el.id()}`);
+
+            return popperCard;
+          }
+        });
+      },
+      enabled: true
+    });
+
     const add = document.createElement("span");
     ReactDOM.render(<Plus />, add);
     menu.push({
@@ -214,6 +338,10 @@ class Canvas extends React.Component {
           d => !children.filter(c => c.data()._rawId === d._rawId).length
         );
 
+        for (let d of data) {
+          d.Class = getObjClass(d);
+        }
+
         const columns = [
           {
             dataField: "Body",
@@ -222,7 +350,7 @@ class Canvas extends React.Component {
             filter: textFilter()
           },
           {
-            dataField: "obj-class",
+            dataField: "Class",
             text: "Class",
             sort: true,
             filter: textFilter()
@@ -241,7 +369,6 @@ class Canvas extends React.Component {
           clickToSelect: true,
           bgColor: "#00BFFF",
           onSelect: (row, isSelect) => {
-            console.log(row);
             const addButton = document.getElementById("add");
 
             if (isSelect) {
@@ -256,7 +383,7 @@ class Canvas extends React.Component {
               }
             }
           },
-          onSelectAll: (isSelect, rows, e) => {
+          onSelectAll: (isSelect, rows) => {
             const addButton = document.getElementById("add");
 
             if (isSelect) {
@@ -295,25 +422,27 @@ class Canvas extends React.Component {
                     >
                       <X />
                     </CardLink>
-                    <span>
-                      <CardLink
-                        href="#"
-                        className="btn btn-success disabled float-right"
-                        id="add"
-                        onClick={async () => {
-                          const selectedData = data.filter(d =>
-                            selected.has(d._rawId)
-                          );
+                    <CardLink
+                      href="#"
+                      className="btn btn-success disabled float-right"
+                      id="add"
+                      onClick={async () => {
+                        const selectedData = data.filter(d =>
+                          selected.has(d._rawId)
+                        );
+                        for (let s of selectedData) {
+                          delete s.Class;
+                        }
 
-                          await addChildren(sessionID, el.id(), selectedData);
-                          window.poppers[el.id()].destroy();
-                          document.getElementById(`popper-${el.id()}`).remove();
-                          self.setElements();
-                        }}
-                      >
-                        <Plus /> Add Selected
-                      </CardLink>
-                    </span>
+                        window.poppers[el.id()].destroy();
+                        document.getElementById(`popper-${el.id()}`).remove();
+
+                        await addChildren(sessionID, el.id(), selectedData);
+                        self.setElements();
+                      }}
+                    >
+                      <Plus /> Add Selected
+                    </CardLink>
                   </CardTitle>
                   <CardText tag="div" className="mw-100">
                     {data.length ? (
@@ -359,26 +488,17 @@ class Canvas extends React.Component {
 
   cyReset() {
     const cy = this.cy;
-    cy.animation({
-      zoom: {
-        level: 1
-      },
-      pan: {
-        x: 0,
-        y: 0
-      },
-      duration: 500
-    });
-    cy.layout(this.getOptions()).run();
+    const animate = cy.$("node").length <= 50;
+
+    cy.reset();
+
+    if (animate) {
+      cy.layout(this.getOptions(animate)).run();
+    }
   }
 
   setHandlers() {
     const cy = this.cy;
-
-    cy.on("resize", () => {
-      this.cyReset();
-      cy.layout(this.getOptions()).run();
-    });
 
     cy.on("select mouseover", "edge", e => {
       e.target.style({
@@ -412,6 +532,7 @@ class Canvas extends React.Component {
       };
       node.style("background-color", styleMap[node.data()["obj-class"]]);
 
+      // noinspection JSNonASCIINames
       const size =
         Math.log(50 * (parseFloat(node.data()["Radius (R⊕)"]) || 1)) * 10;
       node.style("width", `${size}px`);
@@ -436,11 +557,11 @@ class Canvas extends React.Component {
     });
   }
 
-  getOptions() {
+  getOptions(animate = true) {
     return {
       name: "breadthfirst",
 
-      fit: true, // whether to fit the viewport to the graph
+      fit: false, // whether to fit the viewport to the graph
       directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
       padding: 30, // padding on fit
       circle: false, // put depths in concentric circles if true, put depths top down if false
@@ -451,7 +572,7 @@ class Canvas extends React.Component {
       // algorithm
       maximal: true, // whether to shift nodes down their natural BFS depths in order to avoid upwards edges (DAGS
       // only)
-      animate: true, // whether to transition the node positions
+      animate, // whether to transition the node positions
       animationDuration: 500, // duration of animation in ms if enabled
       animateFilter: function() {
         return true;
@@ -509,11 +630,151 @@ class Canvas extends React.Component {
               <RotateCcw size={16} /> Reset
             </Button>
             <Button
-              className="float-right"
+              className="float-right ml-1"
               color="primary"
               onClick={this.cyReset.bind(this)}
             >
               <Repeat size={16} /> Redraw
+            </Button>
+            <Button
+              className="float-right"
+              outline
+              color="info"
+              id="search"
+              onClick={() => {
+                const data = this.cy
+                  .$("node")
+                  .jsons()
+                  .map(node => {
+                    const d = node.data;
+
+                    return {
+                      Body: d.Body,
+                      Type: d.Type,
+                      Class: getObjClass(d),
+                      id: d.id
+                    };
+                  });
+                const columns = [
+                  {
+                    dataField: "Body",
+                    text: "Body",
+                    sort: true,
+                    filter: textFilter()
+                  },
+                  {
+                    dataField: "Class",
+                    text: "Class",
+                    sort: true,
+                    filter: textFilter()
+                  },
+                  {
+                    dataField: "Type",
+                    text: "Type",
+                    sort: true,
+                    filter: textFilter()
+                  }
+                ];
+
+                const selectRow = {
+                  mode: "radio",
+                  clickToSelect: true,
+                  bgColor: "#00BFFF",
+                  onSelect: row => {
+                    const cy = this.cy;
+                    const node = cy.$id(row.id);
+                    const renderedPosition = node.renderedPosition();
+                    const viewportCenterX = cy.width() / 2;
+                    const viewportCenterY = cy.height() / 2;
+                    const relativeRenderedPosition = {
+                      x: viewportCenterX - renderedPosition.x,
+                      y: viewportCenterY - renderedPosition.y
+                    };
+                    const zoomFactor = Math.min(
+                      viewportCenterX / node.width(),
+                      viewportCenterY / node.height()
+                    );
+
+                    if (cy.$("node").length <= 50) {
+                      cy.animate({
+                        panBy: relativeRenderedPosition,
+                        duration: 500
+                      }).delay(100, () => {
+                        cy.animate({
+                          zoom: {
+                            level: zoomFactor,
+                            renderedPosition: {
+                              x: viewportCenterX,
+                              y: viewportCenterY
+                            }
+                          },
+                          duration: 500
+                        });
+                      });
+                    } else {
+                      cy.panBy(relativeRenderedPosition);
+                      cy.zoom({
+                        level: zoomFactor,
+                        renderedPosition: {
+                          x: viewportCenterX,
+                          y: viewportCenterY
+                        }
+                      });
+                    }
+
+                    window.poppers["search"].destroy();
+                    document.getElementById("popper-search").remove();
+                  }
+                };
+
+                const search = document.createElement("div");
+                ReactDOM.render(
+                  <Card>
+                    <CardBody>
+                      <CardTitle
+                        tag="h5"
+                        className="mw-100 mb-4"
+                        style={{ minWidth: "50vw" }}
+                      >
+                        Search{" "}
+                        <small className="text-muted">(Jump to Body)</small>
+                        <CardLink
+                          href="#"
+                          className="btn btn-outline-dark float-right align-bottom ml-1"
+                          onClick={() => {
+                            window.poppers["search"].destroy();
+                            document.getElementById("popper-search").remove();
+                          }}
+                        >
+                          <X />
+                        </CardLink>
+                      </CardTitle>
+                      <CardText tag="div" className="mw-100">
+                        <BootstrapTable
+                          keyField="id"
+                          data={data}
+                          hover
+                          condensed
+                          selectRow={selectRow}
+                          columns={columns}
+                          filter={filterFactory()}
+                        />
+                      </CardText>
+                    </CardBody>
+                  </Card>,
+                  search
+                );
+
+                document.getElementsByTagName("body")[0].appendChild(search);
+                search.setAttribute("id", "popper-search");
+                window.poppers = window.poppers || {};
+                window.poppers["search"] = new PopperCore(
+                  document.getElementById("search"),
+                  search
+                );
+              }}
+            >
+              <Search size={16} /> Search
             </Button>
           </Col>
         </Row>
