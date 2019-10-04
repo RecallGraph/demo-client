@@ -18,8 +18,7 @@ import {
   Save,
   Search,
   Trash2,
-  X,
-  XCircle
+  X
 } from "react-feather";
 import {
   Button,
@@ -79,8 +78,10 @@ class Canvas extends React.Component {
   }
 
   configurePlugins() {
+    const cy = this.cy;
+    const minRadius = Math.min(cy.width(), cy.height()) / 8;
     const cxtMenu = {
-      menuRadius: 60, // the radius of the circular menu in pixels
+      menuRadius: minRadius + 50, // the radius of the circular menu in pixels
       selector: "node", // elements matching this Cytoscape.js selector will trigger cxtmenus
       commands: this.buildMenu.bind(this), // function( ele ){ return [ /*...*/ ] }, // a function that returns
       // commands or a promise of commands
@@ -90,13 +91,13 @@ class Canvas extends React.Component {
       indicatorSize: 16, // the size in pixels of the pointer to the active command
       separatorWidth: 3, // the empty spacing in pixels between successive commands
       spotlightPadding: 4, // extra spacing in pixels between the element and the spotlight
-      minSpotlightRadius: 10, // the minimum radius in pixels of the spotlight
-      maxSpotlightRadius: 20, // the maximum radius in pixels of the spotlight
-      openMenuEvents: "taphold cxttap", // space-separated cytoscape events that will open the menu; only
+      minSpotlightRadius: minRadius - 40, // the minimum radius in pixels of the spotlight
+      maxSpotlightRadius: minRadius - 20, // the maximum radius in pixels of the spotlight
+      openMenuEvents: "tap", // space-separated cytoscape events that will open the menu; only
       // `cxttapstart` and/or `taphold` work here
       itemColor: "white", // the colour of text in the command's content
       itemTextShadowColor: "transparent", // the text shadow colour of the command's content
-      zIndex: 9999, // the z-index of the ui div
+      // zIndex: 9999, // the z-index of the ui div
       atMouse: false // draw menu at mouse position
     };
 
@@ -208,14 +209,6 @@ class Canvas extends React.Component {
         enabled: true
       });
     }
-
-    const cancel = document.createElement("span");
-    ReactDOM.render(<XCircle />, cancel);
-    menu.push({
-      fillColor: "rgba(200, 200, 200, 0.75)",
-      content: cancel.outerHTML,
-      enabled: true
-    });
 
     const edit = document.createElement("span");
     ReactDOM.render(<Edit3 />, edit);
@@ -500,6 +493,14 @@ class Canvas extends React.Component {
   setHandlers() {
     const cy = this.cy;
 
+    cy.on("mouseover", "node", function(evt) {
+      document.getElementById("cy").style.cursor = "pointer";
+    });
+
+    cy.on("mouseout", "node", function(evt) {
+      document.getElementById("cy").style.cursor = "default";
+    });
+
     cy.on("select mouseover", "edge", e => {
       e.target.style({
         width: 4,
@@ -690,10 +691,11 @@ class Canvas extends React.Component {
                       x: viewportCenterX - renderedPosition.x,
                       y: viewportCenterY - renderedPosition.y
                     };
-                    const zoomFactor = Math.min(
-                      viewportCenterX / node.width(),
-                      viewportCenterY / node.height()
-                    );
+                    const zoomFactor =
+                      Math.min(
+                        viewportCenterX / node.width(),
+                        viewportCenterY / node.height()
+                      ) / 2;
 
                     if (cy.$("node").length <= 50) {
                       cy.animate({
