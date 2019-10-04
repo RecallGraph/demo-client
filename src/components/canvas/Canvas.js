@@ -481,10 +481,9 @@ class Canvas extends React.Component {
 
   cyReset() {
     const cy = this.cy;
-    const animate = cy.$("node").length <= 50;
-
     cy.reset();
 
+    const animate = cy.$("node").length <= 50;
     if (animate) {
       cy.layout(this.getOptions(animate)).run();
     }
@@ -590,28 +589,6 @@ class Canvas extends React.Component {
 
     return (
       <div>
-        <Row>
-          <Col>
-            <div
-              className="border border-secondary rounded w-100"
-              id="cy-container"
-            >
-              <div className="m-1" id="cy">
-                <CytoscapeComponent
-                  cy={cy => {
-                    this.cy = cy;
-                  }}
-                  style={{ width: "100%", height: "100%" }}
-                  stylesheet={style}
-                  layout={options}
-                  elements={CytoscapeComponent.normalizeElements(
-                    this.state.elements
-                  )}
-                />
-              </div>
-            </div>
-          </Col>
-        </Row>
         <Row className="my-1">
           <Col>
             <Button
@@ -778,6 +755,28 @@ class Canvas extends React.Component {
             >
               <Search size={16} /> Search
             </Button>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <div
+              className="border border-secondary rounded w-100"
+              id="cy-container"
+            >
+              <div className="m-1" id="cy">
+                <CytoscapeComponent
+                  cy={cy => {
+                    this.cy = cy;
+                  }}
+                  style={{ width: "100%", height: "100%" }}
+                  stylesheet={style}
+                  layout={options}
+                  elements={CytoscapeComponent.normalizeElements(
+                    this.state.elements
+                  )}
+                />
+              </div>
+            </div>
           </Col>
         </Row>
       </div>
