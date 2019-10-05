@@ -6,7 +6,7 @@ import CytoscapeComponent from "react-cytoscapejs";
 import { Col, Row } from "reactstrap";
 import { init, show } from "../../lib/api-client";
 import { generateSessionID } from "../../lib/utils";
-import Actions from "./Actions";
+import Actions from "../actions/Actions";
 import "./Canvas.css";
 import { add, del, edit, view } from "./menu-items";
 import style from "./style";

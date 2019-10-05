@@ -44,10 +44,7 @@ export default menu => {
                   <CardLink
                     href="#"
                     className="btn btn-outline-dark float-right align-bottom"
-                    onClick={() => {
-                      window.poppers[el.id()].destroy();
-                      document.getElementById(`popper-${el.id()}`).remove();
-                    }}
+                    onClick={() => window.poppers[el.id()].destroy()}
                   >
                     <X />
                   </CardLink>
@@ -70,6 +67,11 @@ export default menu => {
           popperCard.setAttribute("id", `popper-${el.id()}`);
 
           return popperCard;
+        },
+        popper: {
+          modifiers: {
+            removeOnDestroy: true
+          }
         }
       });
     },

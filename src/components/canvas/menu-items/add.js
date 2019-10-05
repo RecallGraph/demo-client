@@ -97,10 +97,7 @@ export default (menu, canvas, sessionID) => {
                   <CardLink
                     href="#"
                     className="btn btn-outline-dark float-right align-bottom ml-1"
-                    onClick={() => {
-                      window.poppers[el.id()].destroy();
-                      document.getElementById(`popper-${el.id()}`).remove();
-                    }}
+                    onClick={() => window.poppers[el.id()].destroy()}
                   >
                     <X />
                   </CardLink>
@@ -117,7 +114,6 @@ export default (menu, canvas, sessionID) => {
                       }
 
                       window.poppers[el.id()].destroy();
-                      document.getElementById(`popper-${el.id()}`).remove();
 
                       await addChildren(sessionID, el.id(), selectedData);
                       canvas.setElements();
@@ -151,6 +147,11 @@ export default (menu, canvas, sessionID) => {
           popperCard.setAttribute("id", `popper-${el.id()}`);
 
           return popperCard;
+        },
+        popper: {
+          modifiers: {
+            removeOnDestroy: true
+          }
         }
       });
     },
