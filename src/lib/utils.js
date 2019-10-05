@@ -13,18 +13,28 @@ export const generateSessionID = () => {
   return sessionID;
 };
 
-export const escapeHtml = unsafe => {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-};
-
 export const getObjClass = data => {
   return data["obj-class"]
     .substr(0, data["obj-class"].length - 1)
     .replace(/_/g, " ")
     .toProperCase();
+};
+
+export const getTableProps = el => {
+  const data = Object.assign({}, el.data());
+  delete data.id;
+  delete data._rawId;
+
+  const objClass = getObjClass(data);
+  delete data["obj-class"];
+
+  const body = data.Body;
+  delete data.Body;
+
+  const content = Object.entries(data).map(entry => ({
+    field: entry[0],
+    value: entry[1]
+  }));
+
+  return { objClass, body, content };
 };
