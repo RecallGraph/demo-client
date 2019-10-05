@@ -1,16 +1,11 @@
 import PopperCore from "popper.js";
 import React from "react";
 import ReactDOM from "react-dom";
-import { Clock, X } from "react-feather";
+import { Clock } from "react-feather";
 import Timeline from "react-visjs-timeline";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardLink,
-  CardText,
-  CardTitle
-} from "reactstrap";
+import { Button, Card, CardBody, CardText, CardTitle } from "reactstrap";
+import { setPopper } from "../../../lib/utils";
+import CloseButton from "../elements/CloseButton";
 
 export default () => (
   <Button
@@ -57,16 +52,7 @@ function handler() {
           style={{ minWidth: "50vw" }}
         >
           Timeline <small className="text-muted">(History of Changes)</small>
-          <CardLink
-            href="#"
-            className="btn btn-outline-dark float-right align-bottom ml-1"
-            onClick={() => {
-              window.poppers["timeline"].destroy();
-              document.getElementById("popper-timeline").remove();
-            }}
-          >
-            <X />
-          </CardLink>
+          <CloseButton divKey="popper-timeline" popperKey="timeline" />
         </CardTitle>
         <CardText tag="div" className="mw-100">
           <Timeline options={options} items={items} />
@@ -78,14 +64,8 @@ function handler() {
 
   document.getElementsByTagName("body")[0].appendChild(timeline);
   timeline.setAttribute("id", "popper-timeline");
-  window.poppers = window.poppers || {};
-  window.poppers["timeline"] = new PopperCore(
-    document.getElementById("timeline"),
-    timeline,
-    {
-      modifiers: {
-        removeOnDestroy: true
-      }
-    }
+  setPopper(
+    "timeline",
+    new PopperCore(document.getElementById("timeline"), timeline)
   );
 }

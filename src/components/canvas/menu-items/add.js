@@ -2,10 +2,11 @@ import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import filterFactory, { textFilter } from "react-bootstrap-table2-filter";
 import ReactDOM from "react-dom";
-import { Plus, X } from "react-feather";
+import { Plus } from "react-feather";
 import { Card, CardBody, CardLink, CardText, CardTitle } from "reactstrap";
 import { addChildren, list } from "../../../lib/api-client";
-import { getObjClass } from "../../../lib/utils";
+import { getObjClass, removePopper, setPopper } from "../../../lib/utils";
+import CloseButton from "../elements/CloseButton";
 
 export default (menu, canvas, sessionID) => {
   const add = document.createElement("span");
@@ -80,79 +81,74 @@ export default (menu, canvas, sessionID) => {
         }
       };
 
-      window.poppers = window.poppers || {};
-      window.poppers[el.id()] = el.popper({
-        content: () => {
-          const popperCard = document.createElement("div");
-          ReactDOM.render(
-            <Card>
-              <CardBody>
-                <CardTitle
-                  tag="h5"
-                  className="mw-100 mb-4"
-                  style={{ minWidth: "50vw" }}
-                >
-                  Add Orbiting Body{" "}
-                  <small className="text-muted">({el.data().Body})</small>
-                  <CardLink
-                    href="#"
-                    className="btn btn-outline-dark float-right align-bottom ml-1"
-                    onClick={() => {
-                      window.poppers[el.id()].destroy();
-                      document.getElementById(`popper-${el.id()}`).remove();
-                    }}
+      setPopper(
+        el.id(),
+        el.popper({
+          content: () => {
+            const popperCard = document.createElement("div");
+            ReactDOM.render(
+              <Card>
+                <CardBody>
+                  <CardTitle
+                    tag="h5"
+                    className="mw-100 mb-4"
+                    style={{ minWidth: "50vw" }}
                   >
-                    <X />
-                  </CardLink>
-                  <CardLink
-                    href="#"
-                    className="btn btn-success disabled float-right"
-                    id="add"
-                    onClick={async () => {
-                      const selectedData = data.filter(d =>
-                        selected.has(d._rawId)
-                      );
-                      for (let s of selectedData) {
-                        delete s.Class;
-                      }
-
-                      window.poppers[el.id()].destroy();
-                      document.getElementById(`popper-${el.id()}`).remove();
-
-                      await addChildren(sessionID, el.id(), selectedData);
-                      canvas.setElements();
-                    }}
-                  >
-                    <Plus /> Add Selected
-                  </CardLink>
-                </CardTitle>
-                <CardText tag="div" className="mw-100">
-                  {data.length ? (
-                    <BootstrapTable
-                      bootstrap4
-                      keyField="_rawId"
-                      data={data}
-                      columns={columns}
-                      hover
-                      condensed
-                      selectRow={selectRow}
-                      filter={filterFactory()}
+                    Add Orbiting Body{" "}
+                    <small className="text-muted">({el.data().Body})</small>
+                    <CloseButton
+                      divKey={`popper-${el.id()}`}
+                      popperKey={el.id()}
                     />
-                  ) : (
-                    <p>No Orbiters Found.</p>
-                  )}
-                </CardText>
-              </CardBody>
-            </Card>,
-            popperCard
-          );
+                    <CardLink
+                      href="#"
+                      className="btn btn-success disabled float-right"
+                      id="add"
+                      onClick={async () => {
+                        const selectedData = data.filter(d =>
+                          selected.has(d._rawId)
+                        );
+                        for (let s of selectedData) {
+                          delete s.Class;
+                        }
 
-          document.getElementsByTagName("body")[0].appendChild(popperCard);
-          popperCard.setAttribute("id", `popper-${el.id()}`);
+                        removePopper(el.id(), `popper-${el.id()}`);
 
-          return popperCard;
-        }
-      });
+                        await addChildren(sessionID, el.id(), selectedData);
+                        canvas.setElements();
+                      }}
+                    >
+                      <Plus /> Add Selected
+                    </CardLink>
+                  </CardTitle>
+                  <CardText tag="div" className="mw-100">
+                    {data.length ? (
+                      <BootstrapTable
+                        bootstrap4
+                        keyField="_rawId"
+                        data={data}
+                        columns={columns}
+                        hover
+                        condensed
+                        selectRow={selectRow}
+                        filter={filterFactory()}
+                      />
+                    ) : (
+                      <p>No Orbiters Found.</p>
+                    )}
+                  </CardText>
+                </CardBody>
+              </Card>,
+              popperCard
+            );
+
+            document.getElementsByTagName("body")[0].appendChild(popperCard);
+            popperCard.setAttribute("id", `popper-${el.id()}`);
+
+            return popperCard;
+          }
+        })
+      );
     },
     enabled: true
   });

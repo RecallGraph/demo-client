@@ -38,3 +38,14 @@ export const getTableProps = el => {
 
   return { objClass, body, content };
 };
+
+export const removePopper = (popperKey, divKey) => {
+  window.poppers[popperKey].destroy();
+  delete window.poppers[popperKey];
+  document.getElementById(divKey).remove();
+};
+
+export const setPopper = (id, popper) => {
+  window.poppers = window.poppers || {};
+  window.poppers[id] = popper;
+};

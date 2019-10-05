@@ -5,16 +5,10 @@ import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import filterFactory, { textFilter } from "react-bootstrap-table2-filter";
 import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css";
 import ReactDOM from "react-dom";
-import { Search, X } from "react-feather";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardLink,
-  CardText,
-  CardTitle
-} from "reactstrap";
-import { getObjClass } from "../../../lib/utils";
+import { Search } from "react-feather";
+import { Button, Card, CardBody, CardText, CardTitle } from "reactstrap";
+import { getObjClass, removePopper, setPopper } from "../../../lib/utils";
+import CloseButton from "../elements/CloseButton";
 
 export default ({ canvas }) => (
   <Button
@@ -110,8 +104,7 @@ function handler(canvas) {
         });
       }
 
-      window.poppers["search"].destroy();
-      document.getElementById("popper-search").remove();
+      removePopper("search", "popper-search");
     }
   };
 
@@ -125,16 +118,7 @@ function handler(canvas) {
           style={{ minWidth: "50vw" }}
         >
           Search <small className="text-muted">(Jump to Body)</small>
-          <CardLink
-            href="#"
-            className="btn btn-outline-dark float-right align-bottom ml-1"
-            onClick={() => {
-              window.poppers["search"].destroy();
-              document.getElementById("popper-search").remove();
-            }}
-          >
-            <X />
-          </CardLink>
+          <CloseButton divKey="popper-search" popperKey="search" />
         </CardTitle>
         <CardText tag="div" className="mw-100">
           <BootstrapTable
@@ -154,14 +138,8 @@ function handler(canvas) {
 
   document.getElementsByTagName("body")[0].appendChild(search);
   search.setAttribute("id", "popper-search");
-  window.poppers = window.poppers || {};
-  window.poppers["search"] = new PopperCore(
-    document.getElementById("search"),
-    search,
-    {
-      modifiers: {
-        removeOnDestroy: true
-      }
-    }
+  setPopper(
+    "search",
+    new PopperCore(document.getElementById("search"), search)
   );
 }
