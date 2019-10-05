@@ -6,7 +6,7 @@ import CytoscapeComponent from "react-cytoscapejs";
 import { Col, Row } from "reactstrap";
 import { init, show } from "../../lib/api-client";
 import { generateSessionID } from "../../lib/utils";
-import Actions from "../actions/Actions";
+import { Redraw, Reset, Search, Timeline } from "./action-items";
 import "./Canvas.css";
 import { add, del, edit, view } from "./menu-items";
 import style from "./style";
@@ -203,7 +203,14 @@ class Canvas extends React.Component {
 
     return (
       <div>
-        <Actions canvas={this} />
+        <Row className="my-1">
+          <Col>
+            <Reset canvas={this} />
+            <Redraw canvas={this} />
+            <Search canvas={this} />
+            <Timeline />
+          </Col>
+        </Row>
         <Row>
           <Col>
             <div
