@@ -111,6 +111,7 @@ function handler(canvas) {
       }
 
       window.poppers["search"].destroy();
+      document.getElementById("popper-search").remove();
     }
   };
 
@@ -127,7 +128,10 @@ function handler(canvas) {
           <CardLink
             href="#"
             className="btn btn-outline-dark float-right align-bottom ml-1"
-            onClick={() => window.poppers["search"].destroy()}
+            onClick={() => {
+              window.poppers["search"].destroy();
+              document.getElementById("popper-search").remove();
+            }}
           >
             <X />
           </CardLink>

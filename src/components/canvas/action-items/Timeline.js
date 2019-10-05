@@ -62,6 +62,7 @@ function handler() {
             className="btn btn-outline-dark float-right align-bottom ml-1"
             onClick={() => {
               window.poppers["timeline"].destroy();
+              document.getElementById("popper-timeline").remove();
             }}
           >
             <X />
