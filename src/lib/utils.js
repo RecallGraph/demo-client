@@ -40,9 +40,16 @@ export const getTableProps = el => {
 };
 
 export const removePopper = (popperKey, divKey) => {
-  window.poppers[popperKey].destroy();
-  delete window.poppers[popperKey];
-  document.getElementById(divKey).remove();
+  const popper = window.poppers[popperKey];
+  if (popper) {
+    window.poppers[popperKey].destroy();
+    delete window.poppers[popperKey];
+  }
+
+  const el = document.getElementById(divKey);
+  if (el) {
+    el.remove();
+  }
 };
 
 export const setPopper = (id, popper) => {

@@ -6,7 +6,7 @@ import { removePopper } from "../../../lib/utils";
 export default ({ popperKey, divKey }) => (
   <CardLink
     href="#"
-    className="btn btn-outline-dark float-right align-bottom"
+    className="btn btn-outline-dark float-right align-bottom ml-1"
     onClick={() => removePopper(popperKey, divKey)}
   >
     <X />

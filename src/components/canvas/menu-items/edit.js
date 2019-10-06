@@ -32,7 +32,7 @@ export default (menu, canvas, sessionID) => {
 
             const popperCard = document.createElement("div");
             ReactDOM.render(
-              <Card>
+              <Card className="border-dark">
                 <CardBody>
                   <CardTitle
                     tag="h5"

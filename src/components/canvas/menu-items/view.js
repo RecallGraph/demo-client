@@ -1,5 +1,6 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
+import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import ReactDOM from "react-dom";
 import { Eye } from "react-feather";
 import { Card, CardBody, CardText, CardTitle } from "reactstrap";
@@ -55,6 +56,7 @@ export default menu => {
                       data={content}
                       columns={columns}
                       hover
+                      condensed
                     />
                   </CardText>
                 </CardBody>

@@ -62,6 +62,17 @@ export const list = async (sessionID, _rawId) => {
   return JSON.parse(await response.text());
 };
 
+export const log = async sessionID => {
+  const url = new URL(`${document.location.origin}/api/log`);
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: getHeaders(sessionID)
+  });
+
+  return JSON.parse(await response.text());
+};
+
 export const remove = async (sessionID, nid) => {
   const url = new URL(`${document.location.origin}/api/remove`);
   url.search = new URLSearchParams({ nid });

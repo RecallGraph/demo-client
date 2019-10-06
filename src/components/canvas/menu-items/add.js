@@ -1,6 +1,8 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
+import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import filterFactory, { textFilter } from "react-bootstrap-table2-filter";
+import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css";
 import ReactDOM from "react-dom";
 import { Plus } from "react-feather";
 import { Card, CardBody, CardLink, CardText, CardTitle } from "reactstrap";
@@ -87,7 +89,7 @@ export default (menu, canvas, sessionID) => {
           content: () => {
             const popperCard = document.createElement("div");
             ReactDOM.render(
-              <Card>
+              <Card className="border-dark">
                 <CardBody>
                   <CardTitle
                     tag="h5"

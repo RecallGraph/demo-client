@@ -8,6 +8,7 @@ import { init, show } from "../../lib/api-client";
 import { generateSessionID } from "../../lib/utils";
 import { Redraw, Reset, Search, Timeline } from "./action-items";
 import "./Canvas.css";
+import styleMap from "./elements/style-map";
 import { add, del, edit, view } from "./menu-items";
 import style from "./style";
 
@@ -135,14 +136,6 @@ class Canvas extends React.Component {
 
     cy.on("add", "node", e => {
       const node = e.target;
-      const styleMap = {
-        stars: "#ffff00",
-        planets: "#f7a35c",
-        dwarf_planets: "#90ee7e",
-        moons: "#eeaaee",
-        comets: "#aaeeee",
-        asteroids: "#ff0066"
-      };
       node.style("background-color", styleMap[node.data()["obj-class"]]);
 
       // noinspection JSNonASCIINames
@@ -208,7 +201,7 @@ class Canvas extends React.Component {
             <Reset canvas={this} />
             <Redraw canvas={this} />
             <Search canvas={this} />
-            <Timeline />
+            <Timeline sessionID={window.localStorage.getItem("sessionID")} />
           </Col>
         </Row>
         <Row>

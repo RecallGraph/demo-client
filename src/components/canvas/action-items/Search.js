@@ -110,7 +110,7 @@ function handler(canvas) {
 
   const search = document.createElement("div");
   ReactDOM.render(
-    <Card>
+    <Card className="border-dark">
       <CardBody>
         <CardTitle
           tag="h5"
@@ -122,12 +122,13 @@ function handler(canvas) {
         </CardTitle>
         <CardText tag="div" className="mw-100">
           <BootstrapTable
+            bootstrap4
             keyField="id"
             data={data}
+            columns={columns}
             hover
             condensed
             selectRow={selectRow}
-            columns={columns}
             filter={filterFactory()}
           />
         </CardText>

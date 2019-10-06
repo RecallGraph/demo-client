@@ -1,0 +1,15 @@
+.vis-item.created {
+  background-color: limegreen;
+}
+
+.vis-item.updated {
+  background-color: deepskyblue;
+}
+
+.vis-item.deleted {
+  background-color: red;
+}
+
+.vis-item:hover {
+  cursor: pointer;
+}
