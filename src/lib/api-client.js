@@ -50,6 +50,19 @@ export const show = async (sessionID, nids, timestamp, options) => {
   return cg2cy(data);
 };
 
+export const versions = async (sessionID, nid, ctimes) => {
+  const url = new URL(`${document.location.origin}/api/versions`);
+  url.search = new URLSearchParams({ nid });
+
+  const response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(ctimes),
+    headers: getHeaders(sessionID)
+  });
+
+  return JSON.parse(await response.text());
+};
+
 export const list = async (sessionID, _rawId) => {
   const url = new URL(`${document.location.origin}/api/list`);
   url.search = new URLSearchParams({ _rawId });

@@ -12,7 +12,7 @@ import {
   NavLink,
   Row
 } from "reactstrap";
-import Canvas from "../canvas/Canvas";
+import Canvas from "../Canvas";
 
 class App extends Component {
   constructor(props) {

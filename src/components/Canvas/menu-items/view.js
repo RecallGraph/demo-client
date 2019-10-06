@@ -4,8 +4,8 @@ import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import ReactDOM from "react-dom";
 import { Eye } from "react-feather";
 import { Card, CardBody, CardText, CardTitle } from "reactstrap";
+import CloseButton from "../../../components/CloseButton";
 import { getTableProps, setPopper } from "../../../lib/utils";
-import CloseButton from "../elements/CloseButton";
 
 export default menu => {
   const view = document.createElement("span");

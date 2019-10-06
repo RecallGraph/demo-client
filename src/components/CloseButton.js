@@ -1,7 +1,7 @@
 import React from "react";
 import { X } from "react-feather";
 import { CardLink } from "reactstrap";
-import { removePopper } from "../../../lib/utils";
+import { removePopper } from "../lib/utils";
 
 export default ({ popperKey, divKey }) => (
   <CardLink

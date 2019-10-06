@@ -13,9 +13,9 @@ import {
   Input,
   Label
 } from "reactstrap";
+import CloseButton from "../../../components/CloseButton";
 import { edit as editNode } from "../../../lib/api-client";
 import { getTableProps, removePopper, setPopper } from "../../../lib/utils";
-import CloseButton from "../elements/CloseButton";
 
 export default (menu, canvas, sessionID) => {
   const edit = document.createElement("span");

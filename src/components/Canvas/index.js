@@ -4,11 +4,11 @@ import Popper from "cytoscape-popper";
 import React from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 import { Col, Row } from "reactstrap";
+import styleMap from "../../components/Canvas/style-map";
 import { init, show } from "../../lib/api-client";
 import { generateSessionID } from "../../lib/utils";
 import { Redraw, Reset, Search, Timeline } from "./action-items";
 import "./Canvas.css";
-import styleMap from "./elements/style-map";
 import { add, del, edit, view } from "./menu-items";
 import style from "./style";
 

@@ -7,8 +7,8 @@ import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css
 import ReactDOM from "react-dom";
 import { Search } from "react-feather";
 import { Button, Card, CardBody, CardText, CardTitle } from "reactstrap";
+import CloseButton from "../../../components/CloseButton";
 import { getObjClass, removePopper, setPopper } from "../../../lib/utils";
-import CloseButton from "../elements/CloseButton";
 
 export default ({ canvas }) => (
   <Button

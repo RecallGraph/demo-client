@@ -6,9 +6,9 @@ import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css
 import ReactDOM from "react-dom";
 import { Plus } from "react-feather";
 import { Card, CardBody, CardLink, CardText, CardTitle } from "reactstrap";
+import CloseButton from "../../../components/CloseButton";
 import { addChildren, list } from "../../../lib/api-client";
 import { getObjClass, removePopper, setPopper } from "../../../lib/utils";
-import CloseButton from "../elements/CloseButton";
 
 export default (menu, canvas, sessionID) => {
   const add = document.createElement("span");

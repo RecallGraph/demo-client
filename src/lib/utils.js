@@ -43,6 +43,13 @@ export const removePopper = (popperKey, divKey) => {
   const popper = window.poppers[popperKey];
   if (popper) {
     window.poppers[popperKey].destroy();
+    if (window.currentScrollY) {
+      setTimeout(() => {
+        window.scrollTo(window.scrollX, window.currentScrollY);
+        delete window.currentScrollY;
+      }, 0);
+    }
+
     delete window.poppers[popperKey];
   }
 
