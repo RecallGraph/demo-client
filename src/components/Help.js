@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock, HelpCircle, Repeat, RotateCcw, Search, X } from "react-feather";
-import { Modal, ModalBody, ModalHeader } from "reactstrap";
+import { Button, Modal, ModalBody, ModalHeader } from "reactstrap";
 
 class HelpModal extends React.Component {
   constructor(props) {
@@ -31,9 +31,9 @@ class HelpModal extends React.Component {
           <ModalHeader
             toggle={this.toggle}
             close={
-              <a href="#" className="btn btn-outline-dark">
+              <Button outline color="dark">
                 <X onClick={this.toggle} />
-              </a>
+              </Button>
             }
           >
             CivicGraph Demo
@@ -47,6 +47,7 @@ class HelpModal extends React.Component {
               <a
                 href="https://github.com/adityamukho/CivicGraph"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 project home page
               </a>{" "}
