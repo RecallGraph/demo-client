@@ -9,6 +9,7 @@ import { Search } from "react-feather";
 import { Button, Card, CardBody, CardText, CardTitle } from "reactstrap";
 import CloseButton from "../../../components/CloseButton";
 import { getObjClass, removePopper, setPopper } from "../../../lib/utils";
+import "./Search.css";
 
 export default ({ canvas }) => (
   <Button
@@ -110,13 +111,12 @@ function handler(canvas) {
 
   const search = document.createElement("div");
   ReactDOM.render(
-    <Card className="border-dark">
+    <Card
+      className="border-dark"
+      style={{ minWidth: "50vw", maxWidth: "98vw" }}
+    >
       <CardBody>
-        <CardTitle
-          tag="h5"
-          className="mw-100 mb-4"
-          style={{ minWidth: "50vw" }}
-        >
+        <CardTitle tag="h5" className="mb-4">
           Search <small className="text-muted">(Jump to Body)</small>
           <CloseButton divKey="popper-search" popperKey="search" />
         </CardTitle>
@@ -130,6 +130,7 @@ function handler(canvas) {
             condensed
             selectRow={selectRow}
             filter={filterFactory()}
+            wrapperClasses="search"
           />
         </CardText>
       </CardBody>
@@ -141,6 +142,15 @@ function handler(canvas) {
   search.setAttribute("id", "popper-search");
   setPopper(
     "search",
-    new PopperCore(document.getElementById("search"), search)
+    new PopperCore(document.getElementById("search"), search, {
+      modifiers: {
+        flip: {
+          enabled: false
+        }
+      },
+      onCreate(data) {
+        data.instance.reference.setAttribute("disabled", true);
+      }
+    })
   );
 }

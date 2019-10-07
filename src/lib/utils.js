@@ -42,14 +42,10 @@ export const getTableProps = el => {
 export const removePopper = (popperKey, divKey) => {
   const popper = window.poppers[popperKey];
   if (popper) {
-    window.poppers[popperKey].destroy();
-    if (window.currentScrollY) {
-      setTimeout(() => {
-        window.scrollTo(window.scrollX, window.currentScrollY);
-        delete window.currentScrollY;
-      }, 0);
+    if (popper.reference.removeAttribute) {
+      popper.reference.removeAttribute("disabled");
     }
-
+    popper.destroy();
     delete window.poppers[popperKey];
   }
 

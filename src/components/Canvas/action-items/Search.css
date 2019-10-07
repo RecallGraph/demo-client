@@ -1,0 +1,4 @@
+.react-bootstrap-table.search {
+  max-height: 70vh;
+  overflow: auto;
+}

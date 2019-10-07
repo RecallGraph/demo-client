@@ -13,6 +13,7 @@ import {
   Row
 } from "reactstrap";
 import Canvas from "../Canvas";
+import HelpModal from "../Help";
 
 class App extends Component {
   constructor(props) {
@@ -52,6 +53,11 @@ class App extends Component {
           <NavbarToggler onClick={this.toggle} />
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav className="ml-auto" navbar>
+              <NavItem>
+                <NavLink href="#">
+                  <HelpModal />
+                </NavLink>
+              </NavItem>
               <NavItem>
                 <NavLink
                   href="https://github.com/adityamukho/CivicGraph"

@@ -130,19 +130,7 @@ class Timeline extends React.Component {
           details.setAttribute("id", `popper-details-${item.subgroup}`);
           setPopper(
             `details-${item.subgroup}`,
-            new PopperCore(event.target, details, {
-              placement: "auto",
-              onCreate: () => (window.currentScrollY = window.scrollY),
-              onUpdate: () => (window.currentScrollY = window.scrollY),
-              modifiers: {
-                flip: {
-                  behavior: ["left", "bottom", "top"]
-                },
-                preventOverflow: {
-                  boundariesElement: "viewport"
-                }
-              }
-            })
+            new PopperCore(event.target, details)
           );
         }
       });
@@ -158,19 +146,22 @@ async function handler(sessionID) {
   const { groups, items } = await log(sessionID);
   for (const i of items) {
     i.content = i.className.toProperCase();
-    i.title = new Date(i.start);
+    i.title = new Date(i.start).toISOString();
   }
+
+  console.log({ groups, items });
 
   const options = {
     width: "95vw",
     type: "box",
     zoomKey: "ctrlKey",
     orientation: {
-      axis: "both"
+      axis: "top",
+      item: "top"
     },
-    stack: false,
-    groupHeightMode: "fixed",
-    stackSubgroups: false
+    maxHeight: "70vh",
+    horizontalScroll: false,
+    verticalScroll: true
   };
 
   const timeline = document.createElement("div");
@@ -212,7 +203,16 @@ async function handler(sessionID) {
   timeline.setAttribute("id", "popper-timeline");
   setPopper(
     "timeline",
-    new PopperCore(document.getElementById("timeline"), timeline)
+    new PopperCore(document.getElementById("timeline"), timeline, {
+      modifiers: {
+        flip: {
+          enabled: false
+        }
+      },
+      onCreate(data) {
+        data.instance.reference.setAttribute("disabled", true);
+      }
+    })
   );
 }
 
